@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/SeniorInsight-Project/si-contracts/main/events/sos.updated.v1.json",
+  "title": "sos.updated v1",
+  "description": "Mudança de estado de um alarme de SOS no care-service, inclusive o disparo (status DISPARADO). CloudEvents 1.0 em modo estruturado, publicado na exchange si.events com routing key sos.updated.",
+  "type": "object",
+  "required": ["specversion", "id", "source", "type", "time", "datacontenttype", "dataschema", "subject", "data"],
+  "properties": {
+    "specversion": { "const": "1.0" },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Id único do evento. Consumidores deduplicam por ele."
+    },
+    "source": { "const": "/care-service" },
+    "type": { "const": "sos.updated" },
+    "time": { "type": "string", "format": "date-time" },
+    "datacontenttype": { "const": "application/json" },
+    "dataschema": { "const": "https://raw.githubusercontent.com/SeniorInsight-Project/si-contracts/main/events/sos.updated.v1.json" },
+    "subject": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Id do alarme (agregado de origem)."
+    },
+    "data": { "$ref": "#/$defs/SosUpdated" }
+  },
+  "propertyNames": {
+    "description": "Atributos de extensão do CloudEvents: só letras minúsculas e dígitos.",
+    "pattern": "^[a-z0-9]{1,20}$"
+  },
+  "$defs": {
+    "StatusAlarme": {
+      "enum": ["DISPARADO", "EM_ATENDIMENTO", "RESOLVIDO", "CANCELADO"],
+      "description": "RESOLVIDO e CANCELADO são estados finais."
+    },
+    "SosUpdated": {
+      "type": "object",
+      "required": ["alarmeId", "idosoId", "status", "acionadoEm", "atualizadoEm"],
+      "additionalProperties": false,
+      "properties": {
+        "alarmeId": { "type": "string", "format": "uuid" },
+        "idosoId": { "type": "string", "format": "uuid" },
+        "nomeIdoso": { "type": ["string", "null"] },
+        "status": { "$ref": "#/$defs/StatusAlarme" },
+        "statusAnterior": {
+          "description": "Nulo no disparo.",
+          "oneOf": [{ "$ref": "#/$defs/StatusAlarme" }, { "type": "null" }]
+        },
+        "latitude": { "type": ["number", "null"], "minimum": -90, "maximum": 90 },
+        "longitude": { "type": ["number", "null"], "minimum": -180, "maximum": 180 },
+        "nivelBateria": { "type": ["integer", "null"], "minimum": 0, "maximum": 100 },
+        "observacao": { "type": ["string", "null"] },
+        "acionadoEm": { "type": "string", "format": "date-time", "description": "Momento do disparo do SOS." },
+        "atualizadoEm": { "type": "string", "format": "date-time", "description": "Momento desta mudança de estado." }
+      }
+    }
+  }
+}

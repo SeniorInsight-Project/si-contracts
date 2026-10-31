@@ -1,0 +1,1232 @@
+openapi: 3.1.0
+info:
+  title: SeniorInsight · care-service
+  version: 1.0.0
+  description: |
+    Cuidado do idoso: cadastro do idoso, comorbidades, contatos de emergência, convites e rede de proteção,
+    rotinas de medicação e SOS.
+
+    Rotas e campos seguem os controllers e DTOs da `develop` do si-care-service (prefixo `/api/v1`).
+    Autenticação por token JWT emitido pelo Keycloak (`Authorization: Bearer <token>`).
+servers:
+  - url: http://localhost:8080
+    description: Execução local do care-service
+security:
+  - bearerAuth: []
+tags:
+  - name: Idosos
+    description: Cadastro do idoso monitorado
+  - name: Comorbidades
+    description: Comorbidades do idoso (HU13)
+  - name: Contatos de emergência
+    description: Contatos acionados em uma emergência
+  - name: Rede de proteção
+    description: Convites e membros da rede de proteção do idoso (HU16)
+  - name: Rotinas de medicação
+    description: Rotinas de medicação, confirmação de ingestão e histórico
+  - name: SOS
+    description: Acionamento do botão de SOS e estados do atendimento (HU35)
+
+paths:
+  /api/v1/idosos:
+    get:
+      tags: [Idosos]
+      operationId: listarIdosos
+      summary: Lista os idosos da rede do usuário autenticado
+      responses:
+        '200':
+          description: Idosos aos quais o usuário tem acesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Idoso'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+    post:
+      tags: [Idosos]
+      operationId: cadastrarIdoso
+      summary: Cadastra um idoso
+      description: O usuário autenticado passa a fazer parte da rede de proteção do idoso cadastrado.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IdosoRequest'
+      responses:
+        '201':
+          description: Idoso cadastrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Idoso'
+        '400':
+          $ref: '#/components/responses/RequisicaoInvalida'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '409':
+          $ref: '#/components/responses/Conflito'
+
+  /api/v1/idosos/{idosoId}:
+    parameters:
+      - $ref: '#/components/parameters/IdosoId'
+    get:
+      tags: [Idosos]
+      operationId: buscarIdoso
+      summary: Busca o cadastro de um idoso
+      responses:
+        '200':
+          description: Cadastro do idoso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Idoso'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+    put:
+      tags: [Idosos]
+      operationId: atualizarIdoso
+      summary: Atualiza o cadastro de um idoso
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IdosoRequest'
+      responses:
+        '200':
+          description: Cadastro atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Idoso'
+        '400':
+          $ref: '#/components/responses/RequisicaoInvalida'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Conflito'
+
+  /api/v1/idosos/{idosoId}/comorbidades:
+    parameters:
+      - $ref: '#/components/parameters/IdosoId'
+    get:
+      tags: [Comorbidades]
+      operationId: listarComorbidades
+      summary: Lista as comorbidades do idoso
+      responses:
+        '200':
+          description: Comorbidades cadastradas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comorbidades'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+    post:
+      tags: [Comorbidades]
+      operationId: adicionarComorbidades
+      summary: Adiciona uma ou mais comorbidades ao idoso
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ComorbidadeRequest'
+      responses:
+        '200':
+          description: Lista atualizada de comorbidades
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comorbidades'
+        '400':
+          $ref: '#/components/responses/RequisicaoInvalida'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Conflito'
+
+  /api/v1/idosos/{idosoId}/comorbidades/{nomeComorbidade}:
+    parameters:
+      - $ref: '#/components/parameters/IdosoId'
+      - name: nomeComorbidade
+        in: path
+        required: true
+        description: Nome da comorbidade, codificado para URL
+        schema:
+          type: string
+          minLength: 2
+          maxLength: 150
+    delete:
+      tags: [Comorbidades]
+      operationId: removerComorbidade
+      summary: Remove uma comorbidade do idoso
+      responses:
+        '204':
+          description: Comorbidade removida
+        '400':
+          $ref: '#/components/responses/RequisicaoInvalida'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
+  /api/v1/idosos/{idosoId}/contatos-emergencia:
+    parameters:
+      - $ref: '#/components/parameters/IdosoId'
+    get:
+      tags: [Contatos de emergência]
+      operationId: listarContatosEmergencia
+      summary: Lista os contatos de emergência do idoso, em ordem de prioridade
+      responses:
+        '200':
+          description: Contatos de emergência
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContatoEmergencia'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+    post:
+      tags: [Contatos de emergência]
+      operationId: adicionarContatoEmergencia
+      summary: Adiciona um contato de emergência
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContatoEmergenciaRequest'
+      responses:
+        '201':
+          description: Contato criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContatoEmergencia'
+        '400':
+          $ref: '#/components/responses/RequisicaoInvalida'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
+  /api/v1/idosos/{idosoId}/contatos-emergencia/{contatoId}:
+    parameters:
+      - $ref: '#/components/parameters/IdosoId'
+      - name: contatoId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      tags: [Contatos de emergência]
+      operationId: atualizarContatoEmergencia
+      summary: Atualiza um contato de emergência
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContatoEmergenciaRequest'
+      responses:
+        '200':
+          description: Contato atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContatoEmergencia'
+        '400':
+          $ref: '#/components/responses/RequisicaoInvalida'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+    delete:
+      tags: [Contatos de emergência]
+      operationId: removerContatoEmergencia
+      summary: Remove um contato de emergência
+      responses:
+        '204':
+          description: Contato removido
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
+  /api/v1/idosos/{idosoId}/convites:
+    parameters:
+      - $ref: '#/components/parameters/IdosoId'
+    post:
+      tags: [Rede de proteção]
+      operationId: gerarConvite
+      summary: Gera um convite para alguém entrar na rede de proteção do idoso
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConviteRedeRequest'
+      responses:
+        '201':
+          description: Convite gerado e enviado por e-mail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConviteRede'
+        '400':
+          $ref: '#/components/responses/RequisicaoInvalida'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Conflito'
+
+  /api/v1/convites/aceitar:
+    post:
+      tags: [Rede de proteção]
+      operationId: aceitarConvite
+      summary: Aceita um convite e cria o vínculo com o idoso
+      parameters:
+        - name: token
+          in: query
+          required: true
+          description: Token recebido no e-mail do convite
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Vínculo criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AceiteConvite'
+        '400':
+          $ref: '#/components/responses/RequisicaoInvalida'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '409':
+          $ref: '#/components/responses/Conflito'
+        '410':
+          description: Convite expirado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+
+  /api/v1/idosos/{idosoId}/rede:
+    parameters:
+      - $ref: '#/components/parameters/IdosoId'
+    get:
+      tags: [Rede de proteção]
+      operationId: listarMembrosRede
+      summary: Lista os membros da rede de proteção do idoso
+      responses:
+        '200':
+          description: Membros da rede
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MembroRede'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
+  /api/v1/idosos/{idosoId}/rotinas-medicamentos:
+    parameters:
+      - $ref: '#/components/parameters/IdosoId'
+    get:
+      tags: [Rotinas de medicação]
+      operationId: listarRotinasDiarias
+      summary: Lista as rotinas de medicação do idoso para um dia
+      parameters:
+        - name: data
+          in: query
+          required: false
+          description: 'Dia de referência (padrão: hoje)'
+          schema:
+            type: string
+            format: date
+        - name: apenasAtivos
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Rotinas do dia com o status de ingestão
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RotinaMedicamento'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+    post:
+      tags: [Rotinas de medicação]
+      operationId: criarRotina
+      summary: Cria uma rotina de medicação
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RotinaMedicamentoRequest'
+      responses:
+        '201':
+          description: Rotina criada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RotinaMedicamento'
+        '400':
+          $ref: '#/components/responses/RequisicaoInvalida'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
+  /api/v1/rotinas-medicamentos/{rotinaId}:
+    parameters:
+      - $ref: '#/components/parameters/RotinaId'
+    get:
+      tags: [Rotinas de medicação]
+      operationId: obterRotinaPorId
+      summary: Busca uma rotina de medicação
+      responses:
+        '200':
+          description: Rotina
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RotinaMedicamento'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+    put:
+      tags: [Rotinas de medicação]
+      operationId: atualizarRotina
+      summary: Atualiza uma rotina de medicação (só os campos enviados)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AtualizarRotinaRequest'
+      responses:
+        '200':
+          description: Rotina atualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RotinaMedicamento'
+        '400':
+          $ref: '#/components/responses/RequisicaoInvalida'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+    delete:
+      tags: [Rotinas de medicação]
+      operationId: removerRotina
+      summary: Remove uma rotina de medicação
+      responses:
+        '204':
+          description: Rotina removida
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
+  /api/v1/rotinas-medicamentos/{rotinaId}/confirmar-ingestao:
+    parameters:
+      - $ref: '#/components/parameters/RotinaId'
+    post:
+      tags: [Rotinas de medicação]
+      operationId: confirmarIngestao
+      summary: Registra a ingestão (ou não) de uma dose
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmarIngestaoRequest'
+      responses:
+        '201':
+          description: Ingestão registrada no histórico
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HistoricoMedicacao'
+        '400':
+          $ref: '#/components/responses/RequisicaoInvalida'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
+  /api/v1/rotinas-medicamentos/{rotinaId}/historico:
+    parameters:
+      - $ref: '#/components/parameters/RotinaId'
+    get:
+      tags: [Rotinas de medicação]
+      operationId: listarHistoricoRotina
+      summary: Lista o histórico de ingestões da rotina
+      responses:
+        '200':
+          description: Histórico de ingestões
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HistoricoMedicacao'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
+  /api/v1/idosos/{idosoId}/sos:
+    parameters:
+      - $ref: '#/components/parameters/IdosoId'
+    get:
+      tags: [SOS]
+      operationId: listarSosPorIdoso
+      summary: Lista os alarmes de SOS do idoso
+      responses:
+        '200':
+          description: Alarmes do idoso, do mais recente para o mais antigo
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AlarmeEmergencia'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+    post:
+      tags: [SOS]
+      operationId: dispararSos
+      summary: Dispara o SOS do idoso
+      description: |
+        Registra o alarme e responde imediatamente com 202; a rede de proteção é notificada de forma assíncrona
+        (evento `sos.updated`).
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DispararSosRequest'
+      responses:
+        '202':
+          description: Alarme aceito
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlarmeEmergencia'
+        '400':
+          $ref: '#/components/responses/RequisicaoInvalida'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
+  /api/v1/sos/{alarmeId}:
+    parameters:
+      - $ref: '#/components/parameters/AlarmeId'
+    get:
+      tags: [SOS]
+      operationId: buscarSos
+      summary: Busca um alarme de SOS
+      responses:
+        '200':
+          description: Alarme
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlarmeEmergencia'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
+  /api/v1/sos/{alarmeId}/status:
+    parameters:
+      - $ref: '#/components/parameters/AlarmeId'
+    put:
+      tags: [SOS]
+      operationId: atualizarStatusSos
+      summary: Atualiza o estado de atendimento do alarme
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AtualizarStatusAlarmeRequest'
+      responses:
+        '200':
+          description: Estado atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlarmeEmergencia'
+        '400':
+          $ref: '#/components/responses/RequisicaoInvalida'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token de acesso emitido pelo Keycloak
+
+  parameters:
+    IdosoId:
+      name: idosoId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    RotinaId:
+      name: rotinaId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    AlarmeId:
+      name: alarmeId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    RequisicaoInvalida:
+      description: Dados da requisição inválidos
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Erro'
+    NaoAutenticado:
+      description: Token ausente, inválido ou expirado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Erro'
+    AcessoNegado:
+      description: O usuário não tem acesso a este recurso
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Erro'
+    NaoEncontrado:
+      description: Recurso não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Erro'
+    Conflito:
+      description: Conflito com o estado atual (registro já existente)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Erro'
+
+  schemas:
+    Erro:
+      type: object
+      description: Corpo de erro do GlobalExceptionHandler
+      required: [timestamp, status, error, message, path]
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+          example: 404
+        error:
+          type: string
+          example: Recurso Não Encontrado
+        message:
+          type: string
+        path:
+          type: string
+          example: /api/v1/idosos/a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        errors:
+          type: object
+          description: Mensagem de validação por campo (só em erros de validação)
+          additionalProperties:
+            type: string
+
+    Horario:
+      type: string
+      description: Horário no formato HH:mm
+      pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$'
+      example: '08:00'
+
+    StatusAlarme:
+      type: string
+      enum: [DISPARADO, EM_ATENDIMENTO, RESOLVIDO, CANCELADO]
+      description: RESOLVIDO e CANCELADO são estados finais
+    StatusConvite:
+      type: string
+      enum: [PENDENTE, ACEITO, EXPIRADO, CANCELADO]
+    StatusIngestao:
+      type: string
+      enum: [TOMADO, ATRASADO, IGNORADO, PENDENTE]
+
+    IdosoRequest:
+      type: object
+      required: [nomeCompleto, dataNascimento]
+      properties:
+        nomeCompleto:
+          type: string
+          maxLength: 255
+          example: Maria Aparecida da Silva
+        dataNascimento:
+          type: string
+          format: date
+          example: '1945-03-12'
+        genero:
+          type: [string, 'null']
+          maxLength: 20
+        cpf:
+          type: [string, 'null']
+          maxLength: 14
+          example: 123.456.789-00
+        fotoPerfilUrl:
+          type: [string, 'null']
+          format: uri
+          maxLength: 500
+        tipoSanguineo:
+          type: [string, 'null']
+          maxLength: 5
+          example: O+
+        alergias:
+          type: [string, 'null']
+        logradouro:
+          type: [string, 'null']
+        numero:
+          type: [string, 'null']
+          maxLength: 20
+        bairro:
+          type: [string, 'null']
+          maxLength: 100
+        cidade:
+          type: [string, 'null']
+          maxLength: 100
+        estado:
+          type: [string, 'null']
+          maxLength: 50
+        cep:
+          type: [string, 'null']
+          maxLength: 20
+        planoSaude:
+          type: [string, 'null']
+          maxLength: 100
+        observacoesSocorros:
+          type: [string, 'null']
+          description: Orientações para quem prestar socorro
+
+    Idoso:
+      allOf:
+        - $ref: '#/components/schemas/IdosoRequest'
+        - type: object
+          required: [id, comorbidades, criadoEm, atualizadoEm]
+          properties:
+            id:
+              type: string
+              format: uuid
+            comorbidades:
+              type: array
+              items:
+                type: string
+            limitesBasais:
+              type: object
+              description: Limites basais de sinais vitais usados nos alertas
+              additionalProperties: true
+            criadoEm:
+              type: string
+              format: date-time
+            atualizadoEm:
+              type: string
+              format: date-time
+
+    ComorbidadeRequest:
+      type: object
+      required: [comorbidades]
+      properties:
+        comorbidades:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            minLength: 2
+            maxLength: 150
+          example: [Hipertensão Arterial Sistêmica, Diabetes Mellitus Tipo 2]
+
+    Comorbidades:
+      type: object
+      required: [idosoId, comorbidades]
+      properties:
+        idosoId:
+          type: string
+          format: uuid
+        comorbidades:
+          type: array
+          items:
+            type: string
+        atualizadoEm:
+          type: string
+          format: date-time
+
+    ContatoEmergenciaRequest:
+      type: object
+      required: [nome, telefone]
+      properties:
+        nome:
+          type: string
+          minLength: 2
+          maxLength: 150
+          example: João da Silva
+        telefone:
+          type: string
+          maxLength: 20
+          example: (11) 98765-4321
+        grauParentesco:
+          type: [string, 'null']
+          maxLength: 50
+          example: Filho
+        prioridade:
+          type: integer
+          minimum: 1
+          description: Ordem de acionamento (1 = primeiro a ser chamado)
+          example: 1
+
+    ContatoEmergencia:
+      allOf:
+        - $ref: '#/components/schemas/ContatoEmergenciaRequest'
+        - type: object
+          required: [id, idosoId, prioridade]
+          properties:
+            id:
+              type: string
+              format: uuid
+            idosoId:
+              type: string
+              format: uuid
+
+    ConviteRedeRequest:
+      type: object
+      required: [email, papelAcesso]
+      properties:
+        email:
+          type: string
+          format: email
+          example: maria.silva@email.com
+        papelAcesso:
+          type: string
+          maxLength: 50
+          example: FAMILIAR
+        grauParentesco:
+          type: [string, 'null']
+          maxLength: 50
+          example: Filha
+        mensagemPersonalizada:
+          type: [string, 'null']
+          maxLength: 500
+
+    ConviteRede:
+      type: object
+      required: [id, idosoId, emailDestinatario, status, dataExpiracao, criadoEm]
+      properties:
+        id:
+          type: string
+          format: uuid
+        idosoId:
+          type: string
+          format: uuid
+        nomeIdoso:
+          type: string
+        emailDestinatario:
+          type: string
+          format: email
+        token:
+          type: string
+          description: Token do convite (usado em /api/v1/convites/aceitar)
+        papelAcessoSugerido:
+          type: string
+        grauParentescoSugerido:
+          type: [string, 'null']
+        status:
+          $ref: '#/components/schemas/StatusConvite'
+        dataExpiracao:
+          type: string
+          format: date-time
+        criadoEm:
+          type: string
+          format: date-time
+        mensagemSimulacao:
+          type: [string, 'null']
+          description: Mensagem informativa sobre a simulação do envio do e-mail
+
+    AceiteConvite:
+      type: object
+      required: [vinculoId, idosoId, familiarId, criadoEm]
+      properties:
+        vinculoId:
+          type: string
+          format: uuid
+        idosoId:
+          type: string
+          format: uuid
+        nomeIdoso:
+          type: string
+        familiarId:
+          type: string
+          format: uuid
+        nomeFamiliar:
+          type: string
+        grauParentesco:
+          type: [string, 'null']
+        papelAcesso:
+          type: string
+        criadoEm:
+          type: string
+          format: date-time
+        mensagem:
+          type: string
+
+    MembroRede:
+      type: object
+      required: [vinculoId, familiarId, nomeCompleto, papelAcesso, vinculadoEm]
+      properties:
+        vinculoId:
+          type: string
+          format: uuid
+        familiarId:
+          type: string
+          format: uuid
+        usuarioId:
+          type: [string, 'null']
+          format: uuid
+        nomeCompleto:
+          type: string
+        email:
+          type: [string, 'null']
+          format: email
+        telefone:
+          type: [string, 'null']
+        grauParentesco:
+          type: [string, 'null']
+        papelAcesso:
+          type: string
+        restricoesAcesso:
+          type: object
+          additionalProperties: true
+        vinculadoEm:
+          type: string
+          format: date-time
+
+    RotinaMedicamentoRequest:
+      type: object
+      required: [horario, frequencia]
+      description: Informe `medicamentoId` (medicamento já cadastrado) ou `nomeMedicamento`.
+      properties:
+        medicamentoId:
+          type: [string, 'null']
+          format: uuid
+        nomeMedicamento:
+          type: [string, 'null']
+          example: Losartana Potássica
+        dosagem:
+          type: [string, 'null']
+          example: 50mg
+        instrucoes:
+          type: [string, 'null']
+          example: Ingerir 1 comprimido pela manhã em jejum com água.
+        horario:
+          $ref: '#/components/schemas/Horario'
+        frequencia:
+          type: string
+          minLength: 1
+          example: 1x ao dia
+        diasSemana:
+          type: [string, 'null']
+          example: TODOS
+        dataInicio:
+          type: [string, 'null']
+          format: date
+        dataFim:
+          type: [string, 'null']
+          format: date
+        observacoes:
+          type: [string, 'null']
+
+    AtualizarRotinaRequest:
+      type: object
+      description: Só os campos enviados são alterados.
+      properties:
+        horario:
+          $ref: '#/components/schemas/Horario'
+        frequencia:
+          type: string
+        diasSemana:
+          type: string
+        dataInicio:
+          type: string
+          format: date
+        dataFim:
+          type: [string, 'null']
+          format: date
+        ativo:
+          type: boolean
+        observacoes:
+          type: string
+        dosagem:
+          type: string
+        instrucoes:
+          type: string
+
+    RotinaMedicamento:
+      type: object
+      required: [id, idosoId, medicamentoNome, horario, frequencia, ativo]
+      properties:
+        id:
+          type: string
+          format: uuid
+        idosoId:
+          type: string
+          format: uuid
+        idosoNome:
+          type: string
+        medicamentoId:
+          type: [string, 'null']
+          format: uuid
+        medicamentoNome:
+          type: string
+        dosagem:
+          type: [string, 'null']
+        instrucoes:
+          type: [string, 'null']
+        horario:
+          $ref: '#/components/schemas/Horario'
+        frequencia:
+          type: string
+        diasSemana:
+          type: [string, 'null']
+        dataInicio:
+          type: [string, 'null']
+          format: date
+        dataFim:
+          type: [string, 'null']
+          format: date
+        ativo:
+          type: boolean
+        observacoes:
+          type: [string, 'null']
+        statusHoje:
+          $ref: '#/components/schemas/StatusIngestao'
+        horarioIngestaoHoje:
+          type: [string, 'null']
+          format: date-time
+        ultimaIngestao:
+          type: [string, 'null']
+          format: date-time
+        criadoEm:
+          type: string
+          format: date-time
+        atualizadoEm:
+          type: string
+          format: date-time
+
+    ConfirmarIngestaoRequest:
+      type: object
+      properties:
+        dataHoraIngestao:
+          type: string
+          format: date-time
+          description: Padrão é o momento da requisição
+        dataReferencia:
+          type: string
+          format: date
+        observacao:
+          type: string
+        status:
+          $ref: '#/components/schemas/StatusIngestao'
+
+    HistoricoMedicacao:
+      type: object
+      required: [id, rotinaId, status, criadoEm]
+      properties:
+        id:
+          type: string
+          format: uuid
+        rotinaId:
+          type: string
+          format: uuid
+        medicamentoNome:
+          type: string
+        dosagem:
+          type: [string, 'null']
+        status:
+          $ref: '#/components/schemas/StatusIngestao'
+        dataHoraIngestao:
+          type: [string, 'null']
+          format: date-time
+        dataHoraPrevista:
+          type: [string, 'null']
+          format: date-time
+        dentroJanelaTolerancia:
+          type: [boolean, 'null']
+        diferencaMinutos:
+          type: [integer, 'null']
+          format: int64
+        observacao:
+          type: [string, 'null']
+        registradoPor:
+          type: [string, 'null']
+        mensagem:
+          type: [string, 'null']
+        criadoEm:
+          type: string
+          format: date-time
+
+    DispararSosRequest:
+      type: object
+      description: Corpo opcional; o SOS pode ser disparado sem localização.
+      properties:
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          example: -23.55052
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          example: -46.633308
+        nivelBateria:
+          type: integer
+          minimum: 0
+          maximum: 100
+          example: 85
+        observacao:
+          type: string
+
+    AtualizarStatusAlarmeRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          $ref: '#/components/schemas/StatusAlarme'
+        observacao:
+          type: string
+
+    AlarmeEmergencia:
+      type: object
+      required: [id, idosoId, status, criadoEm]
+      properties:
+        id:
+          type: string
+          format: uuid
+        idosoId:
+          type: string
+          format: uuid
+        nomeIdoso:
+          type: string
+        latitude:
+          type: [number, 'null']
+          format: double
+        longitude:
+          type: [number, 'null']
+          format: double
+        nivelBateria:
+          type: [integer, 'null']
+        status:
+          $ref: '#/components/schemas/StatusAlarme'
+        observacao:
+          type: [string, 'null']
+        criadoEm:
+          type: string
+          format: date-time
+        atualizadoEm:
+          type: [string, 'null']
+          format: date-time
+        mensagem:
+          type: [string, 'null']

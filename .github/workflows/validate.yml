@@ -1,0 +1,46 @@
+name: Validar contratos
+
+# Todo PR para develop ou main valida os OpenAPI, os JSON Schemas dos eventos
+# e confere se os tipos TypeScript gerados estão atualizados.
+
+on:
+  pull_request:
+    branches: [develop, main]
+
+permissions:
+  contents: read
+
+jobs:
+  validar:
+    name: validar
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Lint dos OpenAPI (Redocly)
+        run: npm run lint:openapi
+
+      - name: Validar JSON Schemas dos eventos e exemplos (Ajv)
+        run: npm run validate:events
+
+      - name: Conferir se os tipos gerados estão atualizados
+        run: |
+          npm run generate
+          if [ -n "$(git status --porcelain -- generated/)" ]; then
+            git status --porcelain -- generated/
+            git diff -- generated/
+            echo "::error::Os tipos em generated/ts estão desatualizados. Rode 'npm run generate' e commite o resultado."
+            exit 1
+          fi
+
+      - name: Conferir se os tipos gerados compilam (tsc)
+        run: npm run typecheck
