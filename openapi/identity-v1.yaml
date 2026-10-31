@@ -1,0 +1,331 @@
+openapi: 3.1.0
+info:
+  title: SeniorInsight · identity-service
+  version: 1.0.0
+  description: |
+    Perfis de usuário e pareamento do idoso por código/QR ("convite VIP") com token exchange no Keycloak.
+    Login, senha, SSO e MFA ficam no Keycloak; este serviço é só resource server.
+
+    Prefixo `/v1`, como no si-identity-service (`develop`).
+servers:
+  - url: http://localhost:8080
+    description: Execução local do identity-service
+security:
+  - keycloak-jwt: []
+tags:
+  - name: Perfil
+    description: Perfil do usuário autenticado
+  - name: Pareamento
+    description: Pareamento do aparelho do idoso por código ou QR
+
+paths:
+  /v1/eu:
+    get:
+      tags: [Perfil]
+      operationId: identidadeToken
+      summary: Identidade lida do token
+      description: Retorna o `sub` e as roles de realm do JWT, sem consultar o banco. Serve para validar a integração gateway/Keycloak.
+      responses:
+        '200':
+          description: Identidade do token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentidadeToken'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+
+  /v1/me:
+    get:
+      tags: [Perfil]
+      operationId: obterMeuPerfil
+      summary: Perfil do usuário autenticado
+      responses:
+        '200':
+          description: Perfil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Perfil'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+    put:
+      tags: [Perfil]
+      operationId: atualizarMeuPerfil
+      summary: Atualiza o perfil do usuário autenticado
+      description: E-mail e credenciais são gerenciados no Keycloak e não mudam por aqui.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AtualizarPerfilRequest'
+      responses:
+        '200':
+          description: Perfil atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Perfil'
+        '400':
+          $ref: '#/components/responses/RequisicaoInvalida'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
+  /v1/pareamentos/codigos:
+    post:
+      tags: [Pareamento]
+      operationId: gerarCodigoPareamento
+      summary: Gera um código de pareamento para o aparelho do idoso
+      description: |
+        Chamado pelo familiar. O código (ou o QR com o mesmo conteúdo) é de uso único e expira em poucos minutos.
+        Exige a role `familiar`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GerarCodigoPareamentoRequest'
+      responses:
+        '201':
+          description: Código gerado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodigoPareamento'
+        '400':
+          $ref: '#/components/responses/RequisicaoInvalida'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+
+  /v1/pareamentos/resgates:
+    post:
+      tags: [Pareamento]
+      operationId: resgatarCodigoPareamento
+      summary: Resgata o código no aparelho do idoso e devolve os tokens da sessão
+      description: |
+        Chamado pelo app do idoso, que ainda não tem conta: a rota é pública. O serviço cria (ou reaproveita) o
+        perfil do idoso, registra a sessão do aparelho e faz o token exchange no Keycloak.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResgatarCodigoPareamentoRequest'
+      responses:
+        '200':
+          description: Aparelho pareado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultadoPareamento'
+        '400':
+          $ref: '#/components/responses/RequisicaoInvalida'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          description: Código já resgatado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+        '410':
+          description: Código expirado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+        '429':
+          description: Tentativas demais; tente de novo mais tarde
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+
+components:
+  securitySchemes:
+    keycloak-jwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token de acesso emitido pelo Keycloak
+
+  responses:
+    RequisicaoInvalida:
+      description: Dados da requisição inválidos
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Erro'
+    NaoAutenticado:
+      description: Token ausente, inválido ou expirado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Erro'
+    AcessoNegado:
+      description: O usuário não tem a role necessária
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Erro'
+    NaoEncontrado:
+      description: Recurso não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Erro'
+
+  schemas:
+    Erro:
+      type: object
+      required: [timestamp, status, error, path]
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+
+    TipoPerfil:
+      type: string
+      enum: [FAMILIAR, IDOSO]
+
+    Plataforma:
+      type: string
+      enum: [ANDROID, IOS]
+
+    IdentidadeToken:
+      type: object
+      required: [sub, roles]
+      properties:
+        sub:
+          type: string
+          description: Claim `sub` do usuário no Keycloak
+        roles:
+          type: array
+          description: Roles de realm, em ordem alfabética
+          items:
+            type: string
+
+    Perfil:
+      type: object
+      required: [id, tipo, nome, criadoEm, atualizadoEm]
+      properties:
+        id:
+          type: string
+          format: uuid
+        tipo:
+          $ref: '#/components/schemas/TipoPerfil'
+        nome:
+          type: string
+          maxLength: 150
+          example: Maria Aparecida da Silva
+        email:
+          type: [string, 'null']
+          format: email
+          maxLength: 320
+          description: Pode ser nulo para o idoso pareado por código/QR
+        criadoEm:
+          type: string
+          format: date-time
+        atualizadoEm:
+          type: string
+          format: date-time
+
+    AtualizarPerfilRequest:
+      type: object
+      required: [nome]
+      properties:
+        nome:
+          type: string
+          minLength: 1
+          maxLength: 150
+
+    GerarCodigoPareamentoRequest:
+      type: object
+      required: [nomeIdoso]
+      properties:
+        nomeIdoso:
+          type: string
+          minLength: 1
+          maxLength: 150
+          description: Nome do perfil do idoso que será criado no resgate
+        idosoId:
+          type: [string, 'null']
+          format: uuid
+          description: Idoso já cadastrado no care-service, quando houver
+
+    CodigoPareamento:
+      type: object
+      required: [codigo, qrCodeConteudo, expiraEm]
+      properties:
+        codigo:
+          type: string
+          pattern: '^[A-Z0-9]{6,8}$'
+          example: K7P2QX
+        qrCodeConteudo:
+          type: string
+          description: Conteúdo a ser renderizado como QR no app do familiar
+          example: seniorinsight://pareamento?codigo=K7P2QX
+        expiraEm:
+          type: string
+          format: date-time
+
+    ResgatarCodigoPareamentoRequest:
+      type: object
+      required: [codigo, identificadorAparelho, plataforma]
+      properties:
+        codigo:
+          type: string
+          pattern: '^[A-Z0-9]{6,8}$'
+          example: K7P2QX
+        identificadorAparelho:
+          type: string
+          minLength: 1
+          maxLength: 255
+        plataforma:
+          $ref: '#/components/schemas/Plataforma'
+
+    Tokens:
+      type: object
+      required: [accessToken, refreshToken, expiresIn, tokenType]
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+          description: Validade do access token, em segundos
+        refreshExpiresIn:
+          type: integer
+          description: Validade do refresh token, em segundos
+        tokenType:
+          type: string
+          const: Bearer
+
+    ResultadoPareamento:
+      type: object
+      required: [perfil, sessaoAparelhoId, tokens]
+      properties:
+        perfil:
+          $ref: '#/components/schemas/Perfil'
+        sessaoAparelhoId:
+          type: string
+          format: uuid
+        tokens:
+          $ref: '#/components/schemas/Tokens'
