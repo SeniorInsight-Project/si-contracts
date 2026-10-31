@@ -1,0 +1,41 @@
+{
+  "name": "@seniorinsight/contracts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Contratos compartilhados do SeniorInsight: especificações OpenAPI dos serviços e JSON Schemas dos eventos (CloudEvents) publicados no RabbitMQ (exchange `si.events`).",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SeniorInsight-Project/si-contracts.git"
+  },
+  "type": "module",
+  "types": "./generated/ts/index.ts",
+  "exports": {
+    ".": "./generated/ts/index.ts",
+    "./care": "./generated/ts/care-v1.ts",
+    "./identity": "./generated/ts/identity-v1.ts",
+    "./notification": "./generated/ts/notification-v1.ts",
+    "./events/*": "./events/*"
+  },
+  "files": [
+    "openapi",
+    "events",
+    "generated"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "generate": "openapi-typescript openapi/care-v1.yaml -o generated/ts/care-v1.ts && openapi-typescript openapi/identity-v1.yaml -o generated/ts/identity-v1.ts && openapi-typescript openapi/notification-v1.yaml -o generated/ts/notification-v1.ts",
+    "lint:openapi": "redocly lint openapi/care-v1.yaml openapi/identity-v1.yaml openapi/notification-v1.yaml",
+    "validate:events": "node scripts/validate-events.mjs",
+    "typecheck": "tsc -p tsconfig.json",
+    "validate": "npm run lint:openapi && npm run validate:events && npm run typecheck"
+  },
+  "devDependencies": {
+    "@redocly/cli": "2.72.1",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "openapi-typescript": "7.13.0",
+    "typescript": "5.9.3"
+  }
+}
