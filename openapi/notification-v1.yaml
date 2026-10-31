@@ -1,0 +1,187 @@
+openapi: 3.1.0
+info:
+  title: SeniorInsight · notification-service
+  version: 1.0.0
+  description: |
+    Registro do token de push do aparelho e confirmação de leitura de notificações.
+    O envio das notificações é disparado por eventos (ex.: `sos.updated`), não por esta API.
+
+    Ainda não há código do serviço: prefixo `/v1` e autenticação seguem o si-identity-service.
+servers:
+  - url: http://localhost:8080
+    description: Execução local do notification-service
+security:
+  - keycloak-jwt: []
+tags:
+  - name: Push
+    description: Tokens de push dos aparelhos do usuário
+  - name: Notificações
+    description: Notificações recebidas pelo usuário
+
+paths:
+  /v1/push-tokens:
+    put:
+      tags: [Push]
+      operationId: registrarTokenPush
+      summary: Registra ou atualiza o token de push do aparelho
+      description: |
+        Idempotente por `identificadorAparelho`: chamar de novo com um token novo substitui o anterior.
+        O token fica associado ao usuário do JWT.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrarTokenPushRequest'
+      responses:
+        '200':
+          description: Token registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPush'
+        '400':
+          $ref: '#/components/responses/RequisicaoInvalida'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+
+  /v1/push-tokens/{identificadorAparelho}:
+    delete:
+      tags: [Push]
+      operationId: removerTokenPush
+      summary: 'Remove o token de push do aparelho (ex.: no logout)'
+      parameters:
+        - name: identificadorAparelho
+          in: path
+          required: true
+          schema:
+            type: string
+            maxLength: 255
+      responses:
+        '204':
+          description: Token removido
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
+  /v1/notificacoes/{notificacaoId}/leitura:
+    put:
+      tags: [Notificações]
+      operationId: confirmarLeitura
+      summary: Confirma a leitura de uma notificação
+      description: Idempotente; a primeira confirmação define `lidaEm`.
+      parameters:
+        - name: notificacaoId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Leitura registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeituraNotificacao'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
+components:
+  securitySchemes:
+    keycloak-jwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token de acesso emitido pelo Keycloak
+
+  responses:
+    RequisicaoInvalida:
+      description: Dados da requisição inválidos
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Erro'
+    NaoAutenticado:
+      description: Token ausente, inválido ou expirado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Erro'
+    AcessoNegado:
+      description: A notificação não pertence ao usuário
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Erro'
+    NaoEncontrado:
+      description: Recurso não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Erro'
+
+  schemas:
+    Erro:
+      type: object
+      required: [timestamp, status, error, path]
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+
+    Plataforma:
+      type: string
+      enum: [ANDROID, IOS]
+
+    RegistrarTokenPushRequest:
+      type: object
+      required: [token, identificadorAparelho, plataforma]
+      properties:
+        token:
+          type: string
+          minLength: 1
+          maxLength: 4096
+          description: Token do FCM/APNs/Expo emitido para o aparelho
+        identificadorAparelho:
+          type: string
+          minLength: 1
+          maxLength: 255
+        plataforma:
+          $ref: '#/components/schemas/Plataforma'
+
+    TokenPush:
+      type: object
+      required: [identificadorAparelho, plataforma, atualizadoEm]
+      properties:
+        identificadorAparelho:
+          type: string
+        plataforma:
+          $ref: '#/components/schemas/Plataforma'
+        atualizadoEm:
+          type: string
+          format: date-time
+
+    LeituraNotificacao:
+      type: object
+      required: [notificacaoId, lidaEm]
+      properties:
+        notificacaoId:
+          type: string
+          format: uuid
+        lidaEm:
+          type: string
+          format: date-time

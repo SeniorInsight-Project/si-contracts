@@ -1,0 +1,9 @@
+# Regras do `npm run lint:openapi` (Redocly).
+extends:
+  - recommended
+
+rules:
+  # O projeto ainda não definiu uma licença.
+  info-license: off
+  # O servidor declarado é o de execução local; em produção as rotas passam pelo API Gateway.
+  no-server-example.com: off
