@@ -1,0 +1,18 @@
+{
+  "specversion": "1.0",
+  "id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+  "source": "/care-service",
+  "type": "sos.updated",
+  "time": "2026-10-31T12:05:00Z",
+  "datacontenttype": "application/json",
+  "dataschema": "https://raw.githubusercontent.com/SeniorInsight-Project/si-contracts/main/events/sos.updated.v1.json",
+  "subject": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "data": {
+    "alarmeId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "idosoId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "status": "ABERTO",
+    "nivelBateria": 150,
+    "acionadoEm": "2026-10-31T12:05:00Z",
+    "atualizadoEm": "2026-10-31T12:05:00Z"
+  }
+}
