@@ -1,0 +1,177 @@
+openapi: 3.1.0
+info:
+  title: SeniorInsight · telemetry-service
+  version: 1.0.0
+  description: |
+    Estado atual do idoso e status do celular coletor, calculados a partir dos dados do Open Wearables.
+
+    Ainda não há código do serviço: prefixo `/v1` e autenticação seguem o si-identity-service. Pelo gateway, as
+    rotas ficam em `/api/v1/telemetry/...`. Só aparecem os tipos de dado autorizados pelo idoso (HU-019); um tipo
+    revogado vem como `null`.
+servers:
+  - url: http://localhost:8080
+    description: Execução local do telemetry-service
+security:
+  - keycloak-jwt: []
+tags:
+  - name: Estado atual
+    description: Passos e batimentos de hoje (HU-030, HU-031)
+  - name: Aparelho
+    description: Status do celular do idoso (HU-025, HU-027)
+
+paths:
+  /v1/idosos/{idosoId}/hoje:
+    parameters:
+      - $ref: '#/components/parameters/IdosoId'
+    get:
+      tags: [Estado atual]
+      operationId: obterEstadoAtual
+      summary: Passos do dia, último batimento e hora da última atualização
+      responses:
+        '200':
+          description: Estado atual do idoso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EstadoAtual'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
+  /v1/idosos/{idosoId}/status:
+    parameters:
+      - $ref: '#/components/parameters/IdosoId'
+    get:
+      tags: [Aparelho]
+      operationId: obterStatusAparelho
+      summary: Última sincronização, bateria, versão do app e tipos de dado ativos
+      responses:
+        '200':
+          description: Status do celular coletor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusAparelho'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
+components:
+  securitySchemes:
+    keycloak-jwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token de acesso emitido pelo Keycloak
+
+  parameters:
+    IdosoId:
+      name: idosoId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    NaoAutenticado:
+      description: Token ausente, inválido ou expirado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Erro'
+    AcessoNegado:
+      description: O usuário não tem acesso a este recurso
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Erro'
+    NaoEncontrado:
+      description: Recurso não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Erro'
+
+  schemas:
+    Erro:
+      type: object
+      required: [timestamp, status, error, path]
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+
+    TipoDado:
+      type: string
+      enum: [BATIMENTOS, PASSOS, SONO, OXIGENACAO, LOCALIZACAO]
+
+    EstadoAtual:
+      type: object
+      required: [idosoId, passosHoje, frequenciaCardiaca, coletadoEm]
+      properties:
+        idosoId:
+          type: string
+          format: uuid
+        passosHoje:
+          type: [integer, 'null']
+          minimum: 0
+          description: null quando PASSOS não está autorizado
+        metaPassos:
+          type: integer
+          minimum: 0
+          example: 4000
+        frequenciaCardiaca:
+          type: [integer, 'null']
+          description: Último batimento (BPM); null quando BATIMENTOS não está autorizado
+          example: 78
+        frequenciaCardiacaRepouso:
+          type: [integer, 'null']
+          example: 64
+        coletadoEm:
+          type: [string, 'null']
+          format: date-time
+          description: Hora da última leitura; null quando ainda não chegou nenhum dado
+
+    StatusAparelho:
+      type: object
+      required: [idosoId, ultimaSincronizacao, tiposAtivos]
+      properties:
+        idosoId:
+          type: string
+          format: uuid
+        ultimaSincronizacao:
+          type: [string, 'null']
+          format: date-time
+        nivelBateria:
+          type: [integer, 'null']
+          minimum: 0
+          maximum: 100
+        versaoApp:
+          type: [string, 'null']
+          example: 1.0.4
+        modeloCelular:
+          type: [string, 'null']
+          example: Samsung Galaxy A15
+        sistemaOperacional:
+          type: [string, 'null']
+          example: Android 14
+        tiposAtivos:
+          type: array
+          description: Tipos de dado autorizados pelo idoso (projeção de `consent.changed`)
+          items:
+            $ref: '#/components/schemas/TipoDado'
