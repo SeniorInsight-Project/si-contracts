@@ -3,7 +3,7 @@ info:
   title: SeniorInsight · notification-service
   version: 1.0.0
   description: |
-    Registro do token de push do aparelho e confirmação de leitura de notificações.
+    Registro do token de push do aparelho, confirmação de leitura de notificações e central de alertas.
     O envio das notificações é disparado por eventos (ex.: `sos.updated`), não por esta API.
 
     Ainda não há código do serviço: prefixo `/v1` e autenticação seguem o si-identity-service.
@@ -17,6 +17,8 @@ tags:
     description: Tokens de push dos aparelhos do usuário
   - name: Notificações
     description: Notificações recebidas pelo usuário
+  - name: Alertas
+    description: Central de alertas do familiar e avaliação útil/falso (HU-034, HU-035, HU-037)
 
 paths:
   /v1/push-tokens:
@@ -92,6 +94,72 @@ paths:
         '404':
           $ref: '#/components/responses/NaoEncontrado'
 
+  /v1/idosos/{idosoId}/alertas:
+    parameters:
+      - $ref: '#/components/parameters/IdosoId'
+    get:
+      tags: [Alertas]
+      operationId: listarAlertas
+      summary: Lista os alertas do idoso enviados à rede
+      description: Proposta. Do mais recente para o mais antigo, só para quem está na rede do idoso.
+      responses:
+        '200':
+          description: Alertas do idoso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Alerta'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
+  /v1/idosos/{idosoId}/alertas/{alertaId}/avaliacao:
+    parameters:
+      - $ref: '#/components/parameters/IdosoId'
+      - name: alertaId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      tags: [Alertas]
+      operationId: avaliarAlerta
+      summary: Marca o alerta como útil ou falso
+      description: Proposta. A avaliação pode ser trocada por até 24 h depois do alerta.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AvaliarAlertaRequest'
+      responses:
+        '200':
+          description: Alerta com a avaliação gravada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alerta'
+        '400':
+          $ref: '#/components/responses/RequisicaoInvalida'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          description: Prazo de 24 h para alterar a avaliação vencido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+
 components:
   securitySchemes:
     keycloak-jwt:
@@ -99,6 +167,15 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: Token de acesso emitido pelo Keycloak
+
+  parameters:
+    IdosoId:
+      name: idosoId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
 
   responses:
     RequisicaoInvalida:
@@ -146,6 +223,54 @@ components:
     Plataforma:
       type: string
       enum: [ANDROID, IOS]
+
+    TipoAlerta:
+      type: string
+      enum: [SOS, CRITICO, ATENCAO, TECNICO]
+
+    AvaliacaoAlerta:
+      type: string
+      enum: [UTIL, FALSO]
+
+    Alerta:
+      type: object
+      required: [id, idosoId, tipo, titulo, geradoEm]
+      properties:
+        id:
+          type: string
+          format: uuid
+        idosoId:
+          type: string
+          format: uuid
+        tipo:
+          $ref: '#/components/schemas/TipoAlerta'
+        titulo:
+          type: string
+        detalhe:
+          type: [string, 'null']
+        geradoEm:
+          type: string
+          format: date-time
+        avaliacao:
+          oneOf:
+            - $ref: '#/components/schemas/AvaliacaoAlerta'
+            - type: 'null'
+        avaliadoEm:
+          type: [string, 'null']
+          format: date-time
+        motivoAvaliacao:
+          type: [string, 'null']
+          maxLength: 500
+
+    AvaliarAlertaRequest:
+      type: object
+      required: [avaliacao]
+      properties:
+        avaliacao:
+          $ref: '#/components/schemas/AvaliacaoAlerta'
+        motivo:
+          type: string
+          maxLength: 500
 
     RegistrarTokenPushRequest:
       type: object

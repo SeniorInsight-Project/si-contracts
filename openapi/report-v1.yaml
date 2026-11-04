@@ -1,0 +1,135 @@
+openapi: 3.1.0
+info:
+  title: SeniorInsight · report-service
+  version: 1.0.0
+  description: |
+    Pedido de exclusão da conta e dos dados do titular (HU-022, LGPD).
+
+    Ainda não há código do serviço: prefixo `/v1` e autenticação seguem o si-identity-service. Pelo gateway, as
+    rotas ficam em `/api/v1/report/...`. O pedido publica `lgpd.erasure.requested`, e cada serviço confirma
+    a exclusão por conta própria.
+servers:
+  - url: http://localhost:8080
+    description: Execução local do report-service
+security:
+  - keycloak-jwt: []
+tags:
+  - name: Exclusão
+    description: Exclusão da conta e dos dados (HU-022)
+
+paths:
+  /v1/titulares/{titularId}/exclusao:
+    parameters:
+      - name: titularId
+        in: path
+        required: true
+        description: Id do titular dos dados (o idoso ou, para a própria conta, o familiar)
+        schema:
+          type: string
+          format: uuid
+    post:
+      tags: [Exclusão]
+      operationId: solicitarExclusao
+      summary: Registra o pedido de exclusão do titular
+      description: |
+        Feito pelo idoso ou pelo Familiar Administrador. A exclusão é concluída em até 15 dias, e o comprovante
+        vai por e-mail. Com assinatura Premium ativa, o pedido é recusado com 409.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SolicitarExclusaoRequest'
+      responses:
+        '202':
+          description: Pedido registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PedidoExclusao'
+        '400':
+          $ref: '#/components/responses/RequisicaoInvalida'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          description: Já existe um pedido em andamento ou há assinatura ativa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+
+components:
+  securitySchemes:
+    keycloak-jwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token de acesso emitido pelo Keycloak
+
+  responses:
+    RequisicaoInvalida:
+      description: Dados da requisição inválidos
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Erro'
+    NaoAutenticado:
+      description: Token ausente, inválido ou expirado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Erro'
+    AcessoNegado:
+      description: O usuário não tem acesso a este recurso
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Erro'
+    NaoEncontrado:
+      description: Recurso não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Erro'
+
+  schemas:
+    Erro:
+      type: object
+      required: [timestamp, status, error, path]
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+
+    SolicitarExclusaoRequest:
+      type: object
+      required: [confirmacao]
+      properties:
+        confirmacao:
+          type: string
+          const: EXCLUIR
+
+    PedidoExclusao:
+      type: object
+      required: [protocolo, prazoDias, solicitadoEm]
+      properties:
+        protocolo:
+          type: string
+        prazoDias:
+          type: integer
+          example: 15
+        solicitadoEm:
+          type: string
+          format: date-time

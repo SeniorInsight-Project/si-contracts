@@ -323,6 +323,33 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/idosos/{idosoId}/consentimentos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                idosoId: components["parameters"]["IdosoId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Autorizações atuais do idoso, por tipo de dado
+         * @description Proposta, ainda não implementada no care-service. Todo tipo começa desligado.
+         */
+        get: operations["obterConsentimentos"];
+        /**
+         * Grava as autorizações do idoso
+         * @description Proposta, ainda não implementada no care-service. Só o idoso pareado altera; o familiar, só com curatela
+         *     registrada (RN-001). Cada mudança fica no histórico e publica `consent.changed`.
+         */
+        put: operations["salvarConsentimentos"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -613,6 +640,15 @@ export interface components {
         AtualizarStatusAlarmeRequest: {
             status: components["schemas"]["StatusAlarme"];
             observacao?: string;
+        };
+        /** @description Uma chave por tipo de dado; true = autorizado. */
+        Consentimentos: {
+            BATIMENTOS: boolean;
+            PASSOS: boolean;
+            SONO: boolean;
+            OXIGENACAO: boolean;
+            /** @description Desligada, a localização só é enviada durante um SOS (RN-009) */
+            LOCALIZACAO: boolean;
         };
         AlarmeEmergencia: {
             /** Format: uuid */
@@ -1375,6 +1411,61 @@ export interface operations {
             };
             400: components["responses"]["RequisicaoInvalida"];
             401: components["responses"]["NaoAutenticado"];
+            404: components["responses"]["NaoEncontrado"];
+        };
+    };
+    obterConsentimentos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                idosoId: components["parameters"]["IdosoId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Autorizações atuais */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Consentimentos"];
+                };
+            };
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["AcessoNegado"];
+            404: components["responses"]["NaoEncontrado"];
+        };
+    };
+    salvarConsentimentos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                idosoId: components["parameters"]["IdosoId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Consentimentos"];
+            };
+        };
+        responses: {
+            /** @description Autorizações gravadas */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Consentimentos"];
+                };
+            };
+            400: components["responses"]["RequisicaoInvalida"];
+            401: components["responses"]["NaoAutenticado"];
+            403: components["responses"]["AcessoNegado"];
             404: components["responses"]["NaoEncontrado"];
         };
     };

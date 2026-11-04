@@ -26,6 +26,8 @@ tags:
     description: Rotinas de medicação, confirmação de ingestão e histórico
   - name: SOS
     description: Acionamento do botão de SOS e estados do atendimento (HU35)
+  - name: Consentimentos
+    description: Autorização de uso dos dados por tipo (HU-018, HU-019)
 
 paths:
   /api/v1/idosos:
@@ -642,6 +644,56 @@ paths:
         '404':
           $ref: '#/components/responses/NaoEncontrado'
 
+  /api/v1/idosos/{idosoId}/consentimentos:
+    parameters:
+      - $ref: '#/components/parameters/IdosoId'
+    get:
+      tags: [Consentimentos]
+      operationId: obterConsentimentos
+      summary: Autorizações atuais do idoso, por tipo de dado
+      description: Proposta, ainda não implementada no care-service. Todo tipo começa desligado.
+      responses:
+        '200':
+          description: Autorizações atuais
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Consentimentos'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+    put:
+      tags: [Consentimentos]
+      operationId: salvarConsentimentos
+      summary: Grava as autorizações do idoso
+      description: |
+        Proposta, ainda não implementada no care-service. Só o idoso pareado altera; o familiar, só com curatela
+        registrada (RN-001). Cada mudança fica no histórico e publica `consent.changed`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Consentimentos'
+      responses:
+        '200':
+          description: Autorizações gravadas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Consentimentos'
+        '400':
+          $ref: '#/components/responses/RequisicaoInvalida'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -1197,6 +1249,23 @@ components:
           $ref: '#/components/schemas/StatusAlarme'
         observacao:
           type: string
+
+    Consentimentos:
+      type: object
+      description: Uma chave por tipo de dado; true = autorizado.
+      required: [BATIMENTOS, PASSOS, SONO, OXIGENACAO, LOCALIZACAO]
+      properties:
+        BATIMENTOS:
+          type: boolean
+        PASSOS:
+          type: boolean
+        SONO:
+          type: boolean
+        OXIGENACAO:
+          type: boolean
+        LOCALIZACAO:
+          type: boolean
+          description: Desligada, a localização só é enviada durante um SOS (RN-009)
 
     AlarmeEmergencia:
       type: object

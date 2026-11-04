@@ -1,5 +1,5 @@
 // Garante que os tipos gerados podem ser importados como o app vai importar. Roda em `npm run typecheck`.
-import type { Care, Identity, Notification } from '../generated/ts/index.js';
+import type { Care, Identity, Notification, Report, Telemetry } from '../generated/ts/index.js';
 
 type Idoso = Care.components['schemas']['Idoso'];
 type DispararSos = Care.paths['/api/v1/idosos/{idosoId}/sos']['post'];
@@ -28,4 +28,11 @@ const tokenPush: RegistrarTokenPush = {
   plataforma: 'ANDROID',
 };
 
-export { corpoSos, perfil, statusSos, tokenPush };
+const estadoAtual: Pick<Telemetry.components['schemas']['EstadoAtual'], 'idosoId' | 'passosHoje'> = {
+  idosoId: idoso.id,
+  passosHoje: null,
+};
+
+const pedidoExclusao: Report.components['schemas']['SolicitarExclusaoRequest'] = { confirmacao: 'EXCLUIR' };
+
+export { corpoSos, estadoAtual, pedidoExclusao, perfil, statusSos, tokenPush };
