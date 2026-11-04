@@ -117,6 +117,38 @@ paths:
         '409':
           $ref: '#/components/responses/Conflito'
 
+  /api/v1/familiares/{familiarId}/idosos:
+    parameters:
+      - name: familiarId
+        in: path
+        required: true
+        description: Id do familiar (perfil no identity-service)
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [Idosos]
+      operationId: listarIdososDoFamiliar
+      summary: Lista os idosos aos quais um familiar está vinculado
+      description: |
+        Proposta, ainda não implementada no care-service. Usada pelo app da família para montar a lista de
+        idosos de um familiar específico. Só o próprio familiar (ou um Familiar Administrador do idoso) pode consultar.
+      responses:
+        '200':
+          description: Idosos vinculados ao familiar
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Idoso'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
   /api/v1/idosos/{idosoId}/comorbidades:
     parameters:
       - $ref: '#/components/parameters/IdosoId'
@@ -319,6 +351,32 @@ paths:
         '409':
           $ref: '#/components/responses/Conflito'
 
+  /api/v1/idosos/{idosoId}/convites/pendentes:
+    parameters:
+      - $ref: '#/components/parameters/IdosoId'
+    get:
+      tags: [Rede de proteção]
+      operationId: listarConvitesPendentes
+      summary: Lista os convites pendentes do idoso
+      description: |
+        Proposta, ainda não implementada no care-service. Devolve só os convites com status PENDENTE e ainda
+        dentro da validade, do mais recente para o mais antigo.
+      responses:
+        '200':
+          description: Convites pendentes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConviteRede'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+
   /api/v1/convites/aceitar:
     post:
       tags: [Rede de proteção]
@@ -352,6 +410,63 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Erro'
+
+  /api/v1/convites/{conviteId}:
+    parameters:
+      - name: conviteId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      tags: [Rede de proteção]
+      operationId: editarConvite
+      summary: Edita um convite pendente (só os campos enviados)
+      description: |
+        Proposta, ainda não implementada no care-service. Só o Familiar Administrador do idoso edita, e só
+        convites com status PENDENTE. Trocar o e-mail não renova a validade do convite.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AtualizarConviteRequest'
+      responses:
+        '200':
+          description: Convite atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConviteRede'
+        '400':
+          $ref: '#/components/responses/RequisicaoInvalida'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Conflito'
+    delete:
+      tags: [Rede de proteção]
+      operationId: cancelarConvite
+      summary: Cancela um convite pendente
+      description: |
+        Proposta, ainda não implementada no care-service. Só o Familiar Administrador do idoso cancela. O convite
+        passa para CANCELADO e o token deixa de ser aceito em /api/v1/convites/aceitar.
+      responses:
+        '204':
+          description: Convite cancelado
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '403':
+          $ref: '#/components/responses/AcessoNegado'
+        '404':
+          $ref: '#/components/responses/NaoEncontrado'
+        '409':
+          $ref: '#/components/responses/Conflito'
 
   /api/v1/idosos/{idosoId}/rede:
     parameters:
@@ -942,6 +1057,24 @@ components:
         mensagemSimulacao:
           type: [string, 'null']
           description: Mensagem informativa sobre a simulação do envio do e-mail
+
+    AtualizarConviteRequest:
+      type: object
+      description: Só os campos enviados são alterados.
+      minProperties: 1
+      properties:
+        email:
+          type: string
+          format: email
+        papelAcesso:
+          type: string
+          maxLength: 50
+        grauParentesco:
+          type: [string, 'null']
+          maxLength: 50
+        mensagemPersonalizada:
+          type: [string, 'null']
+          maxLength: 500
 
     AceiteConvite:
       type: object
