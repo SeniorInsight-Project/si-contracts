@@ -10,7 +10,9 @@ Branches: `main` (principal) e `develop` (testes).
 |---|---|
 | `openapi/care-v1.yaml` | care-service: idosos, comorbidades, contatos de emergência, convites e rede de proteção, rotinas de medicação e SOS |
 | `openapi/identity-v1.yaml` | identity-service: perfil do usuário (`/v1/me`) e pareamento do idoso por código/QR |
-| `openapi/notification-v1.yaml` | notification-service: token de push do aparelho e confirmação de leitura |
+| `openapi/notification-v1.yaml` | notification-service: token de push do aparelho, confirmação de leitura e central de alertas |
+| `openapi/telemetry-v1.yaml` | telemetry-service: estado atual do idoso e status do celular |
+| `openapi/report-v1.yaml` | report-service: pedido de exclusão da conta e dos dados (LGPD) |
 | `events/<tipo>.v<N>.json` | JSON Schema (draft 2020-12) do evento no envelope CloudEvents 1.0 |
 | `events/examples/` | Exemplos válidos e inválidos de cada evento, verificados no CI |
 | `generated/ts/` | Tipos TypeScript gerados dos OpenAPI (openapi-typescript). Não edite à mão |

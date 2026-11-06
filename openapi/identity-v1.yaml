@@ -327,5 +327,11 @@ components:
         sessaoAparelhoId:
           type: string
           format: uuid
+        idosoId:
+          type: [string, 'null']
+          format: uuid
+          description: |
+            Id do idoso no care-service, o mesmo informado ao gerar o código. O app do idoso usa esse id nas rotas
+            por idoso (consentimentos, exclusão); null quando o código foi gerado sem idosoId.
         tokens:
           $ref: '#/components/schemas/Tokens'
