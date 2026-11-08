@@ -1,0 +1,16 @@
+{
+  "specversion": "1.0",
+  "id": "9af7aeb5-d376-4d6b-9e6e-596c2c216e41",
+  "source": "/billing-service",
+  "type": "trial.expiring",
+  "time": "2026-11-12T12:00:00Z",
+  "datacontenttype": "application/json",
+  "dataschema": "https://raw.githubusercontent.com/SeniorInsight-Project/si-contracts/main/events/trial.expiring.v1.json",
+  "subject": "2126ee7d-4927-4c68-bc77-f53078fef044",
+  "data": {
+    "trialId": "2126ee7d-4927-4c68-bc77-f53078fef044",
+    "familiarSub": "aeec0862-c2b8-46ac-9d61-bbe31a05552d",
+    "fimTrialEm": "2026-11-15T12:00:00Z",
+    "diasRestantes": 3
+  }
+}

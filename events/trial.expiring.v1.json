@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/SeniorInsight-Project/si-contracts/main/events/trial.expiring.v1.json",
+  "title": "trial.expiring v1",
+  "description": "Lembrete emitido três dias ou um dia antes do fim do trial.",
+  "type": "object",
+  "required": [
+    "specversion",
+    "id",
+    "source",
+    "type",
+    "time",
+    "datacontenttype",
+    "dataschema",
+    "subject",
+    "data"
+  ],
+  "properties": {
+    "specversion": {
+      "const": "1.0"
+    },
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "source": {
+      "const": "/billing-service"
+    },
+    "type": {
+      "const": "trial.expiring"
+    },
+    "time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "datacontenttype": {
+      "const": "application/json"
+    },
+    "dataschema": {
+      "const": "https://raw.githubusercontent.com/SeniorInsight-Project/si-contracts/main/events/trial.expiring.v1.json"
+    },
+    "subject": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "trialId",
+        "familiarSub",
+        "fimTrialEm",
+        "diasRestantes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "trialId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "familiarSub": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "fimTrialEm": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "diasRestantes": {
+          "enum": [
+            1,
+            3
+          ]
+        }
+      }
+    }
+  },
+  "propertyNames": {
+    "pattern": "^[a-z0-9]{1,20}$"
+  }
+}
