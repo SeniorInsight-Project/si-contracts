@@ -12,6 +12,7 @@ Branches: `main` (principal) e `develop` (testes).
 | `openapi/identity-v1.yaml` | identity-service: perfil do usuário (`/v1/me`) e pareamento do idoso por código/QR |
 | `openapi/notification-v1.yaml` | notification-service: token de push do aparelho, confirmação de leitura e central de alertas |
 | `openapi/telemetry-v1.yaml` | telemetry-service: estado atual do idoso e status do celular |
+| `openapi/insight-v1.yaml` | insight-service: Score recente, faixa e explicação do semáforo |
 | `openapi/report-v1.yaml` | report-service: pedido de exclusão da conta e dos dados (LGPD) |
 | `events/<tipo>.v<N>.json` | JSON Schema (draft 2020-12) do evento no envelope CloudEvents 1.0 |
 | `events/examples/` | Exemplos válidos e inválidos de cada evento, verificados no CI |

@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/SeniorInsight-Project/si-contracts/main/events/insight.score.changed.v1.json",
+  "title": "insight.score.changed v1",
+  "description": "Mudança de faixa de bem-estar calculada pelo insight-service.",
+  "type": "object",
+  "required": [
+    "specversion",
+    "id",
+    "source",
+    "type",
+    "time",
+    "datacontenttype",
+    "dataschema",
+    "subject",
+    "data"
+  ],
+  "properties": {
+    "specversion": {
+      "const": "1.0"
+    },
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "source": {
+      "const": "/insight-service"
+    },
+    "type": {
+      "const": "insight.score.changed"
+    },
+    "time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "datacontenttype": {
+      "const": "application/json"
+    },
+    "dataschema": {
+      "const": "https://raw.githubusercontent.com/SeniorInsight-Project/si-contracts/main/events/insight.score.changed.v1.json"
+    },
+    "subject": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "idosoId",
+        "faixaAnterior",
+        "faixa",
+        "calculadoEm"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "idosoId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "faixaAnterior": {
+          "enum": [
+            null,
+            "VERDE",
+            "AMARELO",
+            "VERMELHO"
+          ]
+        },
+        "faixa": {
+          "enum": [
+            "VERDE",
+            "AMARELO",
+            "VERMELHO"
+          ]
+        },
+        "calculadoEm": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  },
+  "propertyNames": {
+    "pattern": "^[a-z0-9]{1,20}$"
+  }
+}
