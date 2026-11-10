@@ -11,6 +11,7 @@
   "types": "./generated/ts/index.ts",
   "exports": {
     ".": "./generated/ts/index.ts",
+    "./billing": "./generated/ts/billing-v1.ts",
     "./care": "./generated/ts/care-v1.ts",
     "./identity": "./generated/ts/identity-v1.ts",
     "./notification": "./generated/ts/notification-v1.ts",
@@ -28,8 +29,8 @@
     "node": ">=20"
   },
   "scripts": {
-    "generate": "openapi-typescript openapi/care-v1.yaml -o generated/ts/care-v1.ts && openapi-typescript openapi/identity-v1.yaml -o generated/ts/identity-v1.ts && openapi-typescript openapi/notification-v1.yaml -o generated/ts/notification-v1.ts && openapi-typescript openapi/telemetry-v1.yaml -o generated/ts/telemetry-v1.ts && openapi-typescript openapi/insight-v1.yaml -o generated/ts/insight-v1.ts && openapi-typescript openapi/report-v1.yaml -o generated/ts/report-v1.ts",
-    "lint:openapi": "redocly lint openapi/care-v1.yaml openapi/identity-v1.yaml openapi/notification-v1.yaml openapi/telemetry-v1.yaml openapi/insight-v1.yaml openapi/report-v1.yaml",
+    "generate": "openapi-typescript openapi/billing-v1.yaml -o generated/ts/billing-v1.ts && openapi-typescript openapi/care-v1.yaml -o generated/ts/care-v1.ts && openapi-typescript openapi/identity-v1.yaml -o generated/ts/identity-v1.ts && openapi-typescript openapi/notification-v1.yaml -o generated/ts/notification-v1.ts && openapi-typescript openapi/telemetry-v1.yaml -o generated/ts/telemetry-v1.ts && openapi-typescript openapi/insight-v1.yaml -o generated/ts/insight-v1.ts && openapi-typescript openapi/report-v1.yaml -o generated/ts/report-v1.ts",
+    "lint:openapi": "redocly lint openapi/billing-v1.yaml openapi/care-v1.yaml openapi/identity-v1.yaml openapi/notification-v1.yaml openapi/telemetry-v1.yaml openapi/insight-v1.yaml openapi/report-v1.yaml",
     "validate:events": "node scripts/validate-events.mjs",
     "typecheck": "tsc -p tsconfig.json",
     "validate": "npm run lint:openapi && npm run validate:events && npm run typecheck"
