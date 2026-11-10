@@ -1,0 +1,79 @@
+openapi: 3.1.0
+info:
+  title: SeniorInsight · insight-service
+  version: 1.0.0
+  description: Semáforo de bem-estar do idoso para familiares com Premium ou trial.
+servers:
+  - url: http://localhost:8080
+    description: Serviço local. O gateway expõe o prefixo /api/v1/insight.
+security:
+  - keycloak-jwt: []
+tags:
+  - name: Bem-estar
+    description: Score e explicação (HU-032 e HU-033)
+paths:
+  /v1/idosos/{idosoId}/score-risco/recente:
+    get:
+      tags: [Bem-estar]
+      operationId: obterScoreRecente
+      summary: Score recente e faixa calculada pelo serviço
+      parameters:
+        - name: idosoId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Score ou estado sem pontuação disponível
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScoreRecente'
+        '401':
+          description: Token ausente, inválido ou expirado
+        '403':
+          description: Vínculo com o idoso ou acesso Premium/trial ausente
+        '503':
+          description: Serviço de verificação de acesso indisponível
+components:
+  securitySchemes:
+    keycloak-jwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token de acesso emitido pelo Keycloak
+  schemas:
+    ScoreRecente:
+      type: object
+      required: [idosoId, estado, diasComDadosValidos, fatores, aviso]
+      properties:
+        idosoId:
+          type: string
+          format: uuid
+        estado:
+          type: string
+          enum: [DISPONIVEL, CONHECENDO_ROTINA, MONITORAMENTO_PAUSADO, SEM_ANALISE]
+        score:
+          type: number
+          minimum: 0
+          maximum: 100
+        faixa:
+          type: string
+          enum: [VERDE, AMARELO, VERMELHO]
+          description: AMARELO é a faixa de atenção, exibida em laranja no app.
+        diasComDadosValidos:
+          type: integer
+          minimum: 0
+        coletadoEm:
+          type: string
+          format: date-time
+        fatores:
+          type: array
+          items:
+            type: string
+        mensagem:
+          type: string
+        aviso:
+          const: 'Informação de apoio ao cuidado; não substitui avaliação médica'

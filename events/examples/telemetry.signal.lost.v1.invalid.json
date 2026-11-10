@@ -1,0 +1,14 @@
+{
+  "specversion": "1.0",
+  "id": "9af7aeb5-d376-4d6b-9e6e-596c2c216e41",
+  "source": "/telemetry-service",
+  "type": "telemetry.signal.lost",
+  "time": "2026-11-01T15:00:00Z",
+  "datacontenttype": "application/json",
+  "dataschema": "https://raw.githubusercontent.com/SeniorInsight-Project/si-contracts/main/events/telemetry.signal.lost.v1.json",
+  "subject": "2126ee7d-4927-4c68-bc77-f53078fef044",
+  "data": {
+    "idosoId": "2126ee7d-4927-4c68-bc77-f53078fef044",
+    "ultimaSincronizacao": "2026-11-01T12:00:00Z"
+  }
+}
