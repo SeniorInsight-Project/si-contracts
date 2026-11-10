@@ -911,6 +911,18 @@ components:
     StatusConvite:
       type: string
       enum: [PENDENTE, ACEITO, EXPIRADO, CANCELADO]
+    PapelAcesso:
+      type: string
+      enum: [ADMINISTRADOR, CUIDADOR, OBSERVADOR, MEDICO]
+      description: |
+        Papel do membro na rede de proteção do idoso. Valores em maiúsculas, sem outras variações.
+        - `ADMINISTRADOR`: único por idoso, criado no cadastro (RN-012). Edita o cadastro, os contatos de
+          emergência e a rede. Não pode ser concedido por convite: `ConviteRedeRequest` e
+          `AtualizarConviteRequest` com `ADMINISTRADOR` respondem 400.
+        - `CUIDADOR`: vê o idoso, a rotina de medicamentos e as comorbidades, e recebe os alertas de SOS.
+        - `OBSERVADOR`: só leitura; recebe os alertas de SOS.
+        - `MEDICO`: leitura clínica do idoso que acompanha.
+        Valor fora da lista em convite responde 400.
     StatusIngestao:
       type: string
       enum: [TOMADO, ATRASADO, IGNORADO, PENDENTE]
@@ -1065,9 +1077,7 @@ components:
           format: email
           example: maria.silva@email.com
         papelAcesso:
-          type: string
-          maxLength: 50
-          example: FAMILIAR
+          $ref: '#/components/schemas/PapelAcesso'
         grauParentesco:
           type: [string, 'null']
           maxLength: 50
@@ -1095,7 +1105,7 @@ components:
           type: string
           description: Token do convite (usado em /api/v1/convites/aceitar)
         papelAcessoSugerido:
-          type: string
+          $ref: '#/components/schemas/PapelAcesso'
         grauParentescoSugerido:
           type: [string, 'null']
         status:
@@ -1119,8 +1129,7 @@ components:
           type: string
           format: email
         papelAcesso:
-          type: string
-          maxLength: 50
+          $ref: '#/components/schemas/PapelAcesso'
         grauParentesco:
           type: [string, 'null']
           maxLength: 50
@@ -1148,7 +1157,7 @@ components:
         grauParentesco:
           type: [string, 'null']
         papelAcesso:
-          type: string
+          $ref: '#/components/schemas/PapelAcesso'
         criadoEm:
           type: string
           format: date-time
@@ -1178,7 +1187,7 @@ components:
         grauParentesco:
           type: [string, 'null']
         papelAcesso:
-          type: string
+          $ref: '#/components/schemas/PapelAcesso'
         restricoesAcesso:
           type: object
           additionalProperties: true
