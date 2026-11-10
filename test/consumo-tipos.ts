@@ -26,6 +26,22 @@ const papelAcesso: Care.components['schemas']['PapelAcesso'] = 'CUIDADOR';
 // @ts-expect-error 'ADMIN' não pertence a PapelAcesso
 const papelInvalido: Care.components['schemas']['ConviteRedeRequest']['papelAcesso'] = 'ADMIN';
 
+const convitePublico: Care.components['schemas']['ConvitePublico'] = {
+  nomeConvidante: 'Carlos Eduardo Souza',
+  primeiroNomeIdoso: 'Maria',
+  papelAcesso: 'CUIDADOR',
+  grauParentesco: 'Filho',
+  expiraEm: '2026-11-20T18:30:00Z',
+  status: 'PENDENTE',
+};
+
+// O convite público não expõe e-mail: o campo não existe no tipo
+// @ts-expect-error 'emailDestinatario' não pertence a ConvitePublico
+const emailNoConvitePublico: Care.components['schemas']['ConvitePublico']['emailDestinatario'] = 'a@b.com';
+
+type ConsultarConvite = Care.paths['/api/v1/convites']['get'];
+const respostaConvite: ConsultarConvite['responses'][200]['content']['application/json'] = convitePublico;
+
 const perfil: Pick<Perfil, 'tipo' | 'nome'> = { tipo: 'IDOSO', nome: idoso.nomeCompleto };
 
 const tokenPush: RegistrarTokenPush = {
@@ -41,4 +57,4 @@ const estadoAtual: Pick<Telemetry.components['schemas']['EstadoAtual'], 'idosoId
 
 const pedidoExclusao: Report.components['schemas']['SolicitarExclusaoRequest'] = { confirmacao: 'EXCLUIR' };
 
-export { corpoSos, estadoAtual, papelAcesso, papelInvalido, pedidoExclusao, perfil, statusSos, tokenPush };
+export { convitePublico, corpoSos, emailNoConvitePublico, respostaConvite, estadoAtual, papelAcesso, papelInvalido, pedidoExclusao, perfil, statusSos, tokenPush };

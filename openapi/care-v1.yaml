@@ -379,6 +379,92 @@ paths:
         '404':
           $ref: '#/components/responses/NaoEncontrado'
 
+  /api/v1/convites:
+    get:
+      tags: [Rede de proteção]
+      operationId: consultarConvite
+      summary: Consulta o convite pelo token, antes de aceitar
+      description: |
+        Proposta, ainda não implementada no care-service. Mostra quem convidou, o primeiro nome do idoso e o papel
+        oferecido, para a tela de aceite exibir antes de chamar `POST /api/v1/convites/aceitar`. A consulta não
+        altera o convite.
+
+        O token vai em query (`?token=`), como em `/api/v1/convites/aceitar`, porque `/api/v1/convites/{conviteId}`
+        já usa o segmento seguinte como id do convite.
+
+        A resposta não traz e-mail, telefone nem dado de saúde: quem consulta ainda não faz parte da rede.
+      parameters:
+        - name: token
+          in: query
+          required: true
+          description: Token recebido no e-mail do convite
+          schema:
+            type: string
+          example: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+      responses:
+        '200':
+          description: Convite pendente e dentro da validade
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConvitePublico'
+              examples:
+                pendente:
+                  summary: Convite pendente
+                  value:
+                    nomeConvidante: Carlos Eduardo Souza
+                    primeiroNomeIdoso: Maria
+                    papelAcesso: CUIDADOR
+                    grauParentesco: Filho
+                    expiraEm: '2026-11-20T18:30:00Z'
+                    status: PENDENTE
+        '400':
+          $ref: '#/components/responses/RequisicaoInvalida'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '404':
+          description: Token inexistente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+              examples:
+                tokenInexistente:
+                  value:
+                    timestamp: '2026-11-10T14:05:00Z'
+                    status: 404
+                    error: Recurso Não Encontrado
+                    message: Convite não encontrado
+                    path: /api/v1/convites
+        '409':
+          description: Convite já aceito
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+              examples:
+                jaAceito:
+                  value:
+                    timestamp: '2026-11-10T14:05:00Z'
+                    status: 409
+                    error: Conflito
+                    message: Convite já foi aceito
+                    path: /api/v1/convites
+        '410':
+          description: Convite expirado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
+              examples:
+                expirado:
+                  value:
+                    timestamp: '2026-11-10T14:05:00Z'
+                    status: 410
+                    error: Gone
+                    message: Convite expirado
+                    path: /api/v1/convites
+
   /api/v1/convites/aceitar:
     post:
       tags: [Rede de proteção]
@@ -1119,6 +1205,32 @@ components:
         mensagemSimulacao:
           type: [string, 'null']
           description: Mensagem informativa sobre a simulação do envio do e-mail
+
+    ConvitePublico:
+      type: object
+      description: |
+        Dados do convite mostrados a quem ainda não é da rede. Só traz o necessário para decidir o aceite: não tem
+        e-mail, telefone nem dado de saúde, e do idoso só o primeiro nome.
+      required: [nomeConvidante, primeiroNomeIdoso, papelAcesso, expiraEm, status]
+      properties:
+        nomeConvidante:
+          type: string
+          description: Nome de quem convidou
+          example: Carlos Eduardo Souza
+        primeiroNomeIdoso:
+          type: string
+          description: Primeiro nome do idoso
+          example: Maria
+        papelAcesso:
+          $ref: '#/components/schemas/PapelAcesso'
+        grauParentesco:
+          type: [string, 'null']
+          example: Filho
+        expiraEm:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/StatusConvite'
 
     AtualizarConviteRequest:
       type: object

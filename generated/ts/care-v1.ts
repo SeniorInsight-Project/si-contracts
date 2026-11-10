@@ -193,6 +193,33 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/convites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Consulta o convite pelo token, antes de aceitar
+         * @description Proposta, ainda não implementada no care-service. Mostra quem convidou, o primeiro nome do idoso e o papel
+         *     oferecido, para a tela de aceite exibir antes de chamar `POST /api/v1/convites/aceitar`. A consulta não
+         *     altera o convite.
+         *
+         *     O token vai em query (`?token=`), como em `/api/v1/convites/aceitar`, porque `/api/v1/convites/{conviteId}`
+         *     já usa o segmento seguinte como id do convite.
+         *
+         *     A resposta não traz e-mail, telefone nem dado de saúde: quem consulta ainda não faz parte da rede.
+         */
+        get: operations["consultarConvite"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/convites/aceitar": {
         parameters: {
             query?: never;
@@ -575,6 +602,28 @@ export interface components {
             criadoEm: string;
             /** @description Mensagem informativa sobre a simulação do envio do e-mail */
             mensagemSimulacao?: string | null;
+        };
+        /**
+         * @description Dados do convite mostrados a quem ainda não é da rede. Só traz o necessário para decidir o aceite: não tem
+         *     e-mail, telefone nem dado de saúde, e do idoso só o primeiro nome.
+         */
+        ConvitePublico: {
+            /**
+             * @description Nome de quem convidou
+             * @example Carlos Eduardo Souza
+             */
+            nomeConvidante: string;
+            /**
+             * @description Primeiro nome do idoso
+             * @example Maria
+             */
+            primeiroNomeIdoso: string;
+            papelAcesso: components["schemas"]["PapelAcesso"];
+            /** @example Filho */
+            grauParentesco?: string | null;
+            /** Format: date-time */
+            expiraEm: string;
+            status: components["schemas"]["StatusConvite"];
         };
         /** @description Só os campos enviados são alterados. */
         AtualizarConviteRequest: {
@@ -1198,6 +1247,61 @@ export interface operations {
             401: components["responses"]["NaoAutenticado"];
             403: components["responses"]["AcessoNegado"];
             404: components["responses"]["NaoEncontrado"];
+        };
+    };
+    consultarConvite: {
+        parameters: {
+            query: {
+                /**
+                 * @description Token recebido no e-mail do convite
+                 * @example 7c9e6679-7425-40de-944b-e07fc1f90ae7
+                 */
+                token: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Convite pendente e dentro da validade */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConvitePublico"];
+                };
+            };
+            400: components["responses"]["RequisicaoInvalida"];
+            401: components["responses"]["NaoAutenticado"];
+            /** @description Token inexistente */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Erro"];
+                };
+            };
+            /** @description Convite já aceito */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Erro"];
+                };
+            };
+            /** @description Convite expirado */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Erro"];
+                };
+            };
         };
     };
     aceitarConvite: {
