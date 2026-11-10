@@ -20,6 +20,12 @@ const corpoSos: NonNullable<DispararSos['requestBody']>['content']['application/
 
 const statusSos: Care.components['schemas']['StatusAlarme'] = 'EM_ATENDIMENTO';
 
+const papelAcesso: Care.components['schemas']['PapelAcesso'] = 'CUIDADOR';
+
+// Convite com papel fora da lista não compila (o care responde 400 em runtime)
+// @ts-expect-error 'ADMIN' não pertence a PapelAcesso
+const papelInvalido: Care.components['schemas']['ConviteRedeRequest']['papelAcesso'] = 'ADMIN';
+
 const perfil: Pick<Perfil, 'tipo' | 'nome'> = { tipo: 'IDOSO', nome: idoso.nomeCompleto };
 
 const tokenPush: RegistrarTokenPush = {
@@ -35,4 +41,4 @@ const estadoAtual: Pick<Telemetry.components['schemas']['EstadoAtual'], 'idosoId
 
 const pedidoExclusao: Report.components['schemas']['SolicitarExclusaoRequest'] = { confirmacao: 'EXCLUIR' };
 
-export { corpoSos, estadoAtual, pedidoExclusao, perfil, statusSos, tokenPush };
+export { corpoSos, estadoAtual, papelAcesso, papelInvalido, pedidoExclusao, perfil, statusSos, tokenPush };

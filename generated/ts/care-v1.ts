@@ -457,6 +457,18 @@ export interface components {
         StatusAlarme: "DISPARADO" | "EM_ATENDIMENTO" | "RESOLVIDO" | "CANCELADO";
         /** @enum {string} */
         StatusConvite: "PENDENTE" | "ACEITO" | "EXPIRADO" | "CANCELADO";
+        /**
+         * @description Papel do membro na rede de proteção do idoso. Valores em maiúsculas, sem outras variações.
+         *     - `ADMINISTRADOR`: único por idoso, criado no cadastro (RN-012). Edita o cadastro, os contatos de
+         *       emergência e a rede. Não pode ser concedido por convite: `ConviteRedeRequest` e
+         *       `AtualizarConviteRequest` com `ADMINISTRADOR` respondem 400.
+         *     - `CUIDADOR`: vê o idoso, a rotina de medicamentos e as comorbidades, e recebe os alertas de SOS.
+         *     - `OBSERVADOR`: só leitura; recebe os alertas de SOS.
+         *     - `MEDICO`: leitura clínica do idoso que acompanha.
+         *     Valor fora da lista em convite responde 400.
+         * @enum {string}
+         */
+        PapelAcesso: "ADMINISTRADOR" | "CUIDADOR" | "OBSERVADOR" | "MEDICO";
         /** @enum {string} */
         StatusIngestao: "TOMADO" | "ATRASADO" | "IGNORADO" | "PENDENTE";
         IdosoRequest: {
@@ -539,8 +551,7 @@ export interface components {
              * @example maria.silva@email.com
              */
             email: string;
-            /** @example FAMILIAR */
-            papelAcesso: string;
+            papelAcesso: components["schemas"]["PapelAcesso"];
             /** @example Filha */
             grauParentesco?: string | null;
             mensagemPersonalizada?: string | null;
@@ -555,7 +566,7 @@ export interface components {
             emailDestinatario: string;
             /** @description Token do convite (usado em /api/v1/convites/aceitar) */
             token?: string;
-            papelAcessoSugerido?: string;
+            papelAcessoSugerido?: components["schemas"]["PapelAcesso"];
             grauParentescoSugerido?: string | null;
             status: components["schemas"]["StatusConvite"];
             /** Format: date-time */
@@ -569,7 +580,7 @@ export interface components {
         AtualizarConviteRequest: {
             /** Format: email */
             email?: string;
-            papelAcesso?: string;
+            papelAcesso?: components["schemas"]["PapelAcesso"];
             grauParentesco?: string | null;
             mensagemPersonalizada?: string | null;
         };
@@ -583,7 +594,7 @@ export interface components {
             familiarId: string;
             nomeFamiliar?: string;
             grauParentesco?: string | null;
-            papelAcesso?: string;
+            papelAcesso?: components["schemas"]["PapelAcesso"];
             /** Format: date-time */
             criadoEm: string;
             mensagem?: string;
@@ -600,7 +611,7 @@ export interface components {
             email?: string | null;
             telefone?: string | null;
             grauParentesco?: string | null;
-            papelAcesso: string;
+            papelAcesso: components["schemas"]["PapelAcesso"];
             restricoesAcesso?: {
                 [key: string]: unknown;
             };
