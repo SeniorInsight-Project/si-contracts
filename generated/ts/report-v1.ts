@@ -9,7 +9,7 @@ export interface paths {
             query?: never;
             header?: never;
             path: {
-                /** @description Id do titular dos dados (o idoso ou, para a própria conta, o familiar) */
+                /** @description `sub` do Keycloak do titular autenticado */
                 titularId: string;
             };
             cookie?: never;
@@ -18,8 +18,10 @@ export interface paths {
         put?: never;
         /**
          * Registra o pedido de exclusão do titular
-         * @description Feito pelo idoso ou pelo Familiar Administrador. A exclusão é concluída em até 15 dias, e o comprovante
-         *     vai por e-mail. Com assinatura Premium ativa, o pedido é recusado com 409.
+         * @description Só o próprio titular autenticado pede a exclusão da sua conta e dos seus dados: `titularId` tem de ser o
+         *     `sub` do token, vale para o idoso e para o familiar. Pedido em nome de outra pessoa não é aceito (responde
+         *     403). A exclusão é concluída em até 15 dias, e o comprovante vai por e-mail. Com assinatura Premium ativa,
+         *     o pedido é recusado com 409.
          */
         post: operations["solicitarExclusao"];
         delete?: never;
@@ -71,15 +73,6 @@ export interface components {
                 "application/json": components["schemas"]["Erro"];
             };
         };
-        /** @description O usuário não tem acesso a este recurso */
-        AcessoNegado: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/json": components["schemas"]["Erro"];
-            };
-        };
         /** @description Recurso não encontrado */
         NaoEncontrado: {
             headers: {
@@ -102,7 +95,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description Id do titular dos dados (o idoso ou, para a própria conta, o familiar) */
+                /** @description `sub` do Keycloak do titular autenticado */
                 titularId: string;
             };
             cookie?: never;
@@ -124,7 +117,15 @@ export interface operations {
             };
             400: components["responses"]["RequisicaoInvalida"];
             401: components["responses"]["NaoAutenticado"];
-            403: components["responses"]["AcessoNegado"];
+            /** @description O `titularId` do path é diferente do `sub` do token */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Erro"];
+                };
+            };
             404: components["responses"]["NaoEncontrado"];
             /** @description Já existe um pedido em andamento ou há assinatura ativa */
             409: {
