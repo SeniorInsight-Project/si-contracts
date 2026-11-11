@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/SeniorInsight-Project/si-contracts/main/events/telemetry.signal.lost.v1.json",
+  "title": "telemetry.signal.lost v1",
+  "description": "Perda de sincronização detectada pelo serviço de telemetria.",
+  "type": "object",
+  "required": [
+    "specversion",
+    "id",
+    "source",
+    "type",
+    "time",
+    "datacontenttype",
+    "dataschema",
+    "subject",
+    "data"
+  ],
+  "properties": {
+    "specversion": {
+      "const": "1.0"
+    },
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "source": {
+      "const": "/telemetry-service"
+    },
+    "type": {
+      "const": "telemetry.signal.lost"
+    },
+    "time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "datacontenttype": {
+      "const": "application/json"
+    },
+    "dataschema": {
+      "const": "https://raw.githubusercontent.com/SeniorInsight-Project/si-contracts/main/events/telemetry.signal.lost.v1.json"
+    },
+    "subject": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "idosoId",
+        "ultimaSincronizacao",
+        "detectadoEm"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "idosoId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "ultimaSincronizacao": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "detectadoEm": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  },
+  "propertyNames": {
+    "pattern": "^[a-z0-9]{1,20}$"
+  }
+}
