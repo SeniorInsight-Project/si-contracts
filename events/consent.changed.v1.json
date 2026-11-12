@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/SeniorInsight-Project/si-contracts/main/events/consent.changed.v1.json",
+  "title": "consent.changed v1",
+  "description": "Mudança de consentimento por tipo de dado e destinatário, publicada pelo care-service na exchange si.events.",
+  "type": "object",
+  "required": [
+    "specversion",
+    "id",
+    "source",
+    "type",
+    "time",
+    "datacontenttype",
+    "dataschema",
+    "subject",
+    "data"
+  ],
+  "properties": {
+    "specversion": {
+      "const": "1.0"
+    },
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "source": {
+      "const": "/care-service"
+    },
+    "type": {
+      "const": "consent.changed"
+    },
+    "time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "datacontenttype": {
+      "const": "application/json"
+    },
+    "dataschema": {
+      "const": "https://raw.githubusercontent.com/SeniorInsight-Project/si-contracts/main/events/consent.changed.v1.json"
+    },
+    "subject": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Identificador do idoso no care-service."
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "idosoId",
+        "tipo",
+        "destinatario",
+        "autorizado"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "idosoId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "tipo": {
+          "enum": [
+            "BATIMENTOS",
+            "PASSOS",
+            "SONO",
+            "OXIGENACAO",
+            "LOCALIZACAO"
+          ]
+        },
+        "destinatario": {
+          "enum": [
+            "REDE",
+            "MEDICO",
+            "OPERADORA"
+          ]
+        },
+        "autorizado": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "propertyNames": {
+    "pattern": "^[a-z0-9]{1,20}$"
+  }
+}

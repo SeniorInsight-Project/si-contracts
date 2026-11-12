@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/SeniorInsight-Project/si-contracts/main/events/subscription.changed.v1.json",
+  "title": "subscription.changed v1",
+  "description": "Direito efetivo ao Premium, incluindo trial e carência.",
+  "type": "object",
+  "required": [
+    "specversion",
+    "id",
+    "source",
+    "type",
+    "time",
+    "datacontenttype",
+    "dataschema",
+    "subject",
+    "data"
+  ],
+  "properties": {
+    "specversion": {
+      "const": "1.0"
+    },
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "source": {
+      "const": "/billing-service"
+    },
+    "type": {
+      "const": "subscription.changed"
+    },
+    "time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "datacontenttype": {
+      "const": "application/json"
+    },
+    "dataschema": {
+      "const": "https://raw.githubusercontent.com/SeniorInsight-Project/si-contracts/main/events/subscription.changed.v1.json"
+    },
+    "subject": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "familiarSub",
+        "plano",
+        "ativa",
+        "expiraEm",
+        "emCarencia"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "trialId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "familiarSub": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "plano": {
+          "enum": [
+            "FREE",
+            "TRIAL",
+            "PREMIUM"
+          ]
+        },
+        "ativa": {
+          "type": "boolean"
+        },
+        "expiraEm": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "fimTrialEm": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "emCarencia": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "propertyNames": {
+    "pattern": "^[a-z0-9]{1,20}$"
+  }
+}

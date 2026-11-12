@@ -23,7 +23,7 @@ paths:
       - name: titularId
         in: path
         required: true
-        description: Id do titular dos dados (o idoso ou, para a própria conta, o familiar)
+        description: '`sub` do Keycloak do titular autenticado'
         schema:
           type: string
           format: uuid
@@ -32,8 +32,10 @@ paths:
       operationId: solicitarExclusao
       summary: Registra o pedido de exclusão do titular
       description: |
-        Feito pelo idoso ou pelo Familiar Administrador. A exclusão é concluída em até 15 dias, e o comprovante
-        vai por e-mail. Com assinatura Premium ativa, o pedido é recusado com 409.
+        Só o próprio titular autenticado pede a exclusão da sua conta e dos seus dados: `titularId` tem de ser o
+        `sub` do token, vale para o idoso e para o familiar. Pedido em nome de outra pessoa não é aceito (responde
+        403). A exclusão é concluída em até 15 dias, e o comprovante vai por e-mail. Com assinatura Premium ativa,
+        o pedido é recusado com 409.
       requestBody:
         required: true
         content:
@@ -52,7 +54,11 @@ paths:
         '401':
           $ref: '#/components/responses/NaoAutenticado'
         '403':
-          $ref: '#/components/responses/AcessoNegado'
+          description: O `titularId` do path é diferente do `sub` do token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Erro'
         '404':
           $ref: '#/components/responses/NaoEncontrado'
         '409':
@@ -79,12 +85,6 @@ components:
             $ref: '#/components/schemas/Erro'
     NaoAutenticado:
       description: Token ausente, inválido ou expirado
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Erro'
-    AcessoNegado:
-      description: O usuário não tem acesso a este recurso
       content:
         application/json:
           schema:

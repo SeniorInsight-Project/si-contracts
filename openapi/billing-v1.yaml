@@ -1,0 +1,96 @@
+openapi: 3.1.0
+info:
+  title: SeniorInsight · billing-service
+  version: 1.0.0
+  description: Consulta de direito ao Premium e ativação interna do período de teste.
+servers:
+  - url: http://localhost:8080
+    description: Serviço local. O gateway expõe a consulta sob /api/v1/billing.
+security:
+  - keycloak-jwt: []
+tags:
+  - name: Direito
+    description: Plano atual e trial (HU-040 a HU-042)
+paths:
+  /v1/direito:
+    get:
+      tags: [Direito]
+      operationId: consultarDireito
+      summary: Consultar o plano e o preço Premium do próprio titular
+      responses:
+        '200':
+          $ref: '#/components/responses/DireitoAtual'
+        '401':
+          description: Token ausente, inválido ou expirado
+  /internal/familias/{sub}/trial:
+    post:
+      tags: [Direito]
+      operationId: iniciarTrial
+      summary: Registrar uma única vez o trial do primeiro cadastro
+      description: |
+        Uso interno do care-service com token de serviço e escopo billing.trial.write.
+        Repetir a solicitação devolve o direito atual e preserva a data de fim original.
+      parameters:
+        - name: sub
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+      responses:
+        '200':
+          $ref: '#/components/responses/DireitoAtual'
+        '400':
+          description: Identificador inválido
+        '401':
+          description: Token ausente, inválido ou expirado
+        '403':
+          description: Cliente ou escopo insuficiente
+        '410':
+          description: Família excluída
+components:
+  securitySchemes:
+    keycloak-jwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token de acesso emitido pelo Keycloak
+  responses:
+    DireitoAtual:
+      description: Direito atual da família
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Direito'
+  schemas:
+    Direito:
+      type: object
+      required: [plano, acessoPremium, assinaturaAtiva, fimTrialEm, acessoAte, emCarencia, precoPremiumCentavos, moeda]
+      properties:
+        plano:
+          type: string
+          enum: [FREE, TRIAL, PREMIUM]
+        acessoPremium:
+          type: boolean
+          description: Usado apenas para recursos Premium.
+        assinaturaAtiva:
+          type: boolean
+          description: Indica assinatura Premium ativa ou inadimplente para o fluxo de cancelamento.
+        fimTrialEm:
+          type: [string, 'null']
+          format: date-time
+          description: Fim dos 14 dias do trial, sem contar a carência.
+        acessoAte:
+          type: [string, 'null']
+          format: date-time
+          description: Fim do acesso Premium, incluindo a carência quando aplicável.
+        emCarencia:
+          type: boolean
+        precoPremiumCentavos:
+          type: [integer, 'null']
+          format: int64
+          minimum: 1
+          description: Preço mensal configurado. Nulo indica preço indisponível.
+        moeda:
+          const: BRL
