@@ -1,6 +1,6 @@
 // Valida os JSON Schemas de events/ (draft 2020-12) e os exemplos em events/examples/.
 // Cada schema events/<tipo>.v<N>.json precisa de $id e "dataschema" apontando para o próprio arquivo;
-// *.valid.json tem que passar e *.invalid.json tem que falhar contra o schema de mesmo nome.
+// *.valid.json tem que passar (variantes: <schema>.<variante>.valid.json) e *.invalid.json tem que falhar contra o schema de mesmo nome.
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import Ajv2020 from 'ajv/dist/2020.js';
@@ -41,7 +41,7 @@ for (const arquivo of readdirSync(PASTA_EVENTOS).filter((nome) => nome.endsWith(
 }
 
 for (const arquivo of readdirSync(PASTA_EXEMPLOS).filter((nome) => nome.endsWith('.json'))) {
-  const [, schema, esperado] = arquivo.match(/^(.+\.v[0-9]+)\.(valid|invalid)\.json$/) ?? [];
+  const [, schema, esperado] = arquivo.match(/^(.+?\.v[0-9]+)(?:\.[a-z0-9-]+)?\.(valid|invalid)\.json$/) ?? [];
   const validar = schema && validadores.get(`${schema}.json`);
   if (!validar) {
     erros.push(`examples/${arquivo}: sem schema correspondente (use <schema>.valid.json ou <schema>.invalid.json)`);
