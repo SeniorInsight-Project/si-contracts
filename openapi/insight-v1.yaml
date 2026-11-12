@@ -59,10 +59,11 @@ components:
           type: number
           minimum: 0
           maximum: 100
+          description: Score de risco. Valores maiores indicam maior risco, conforme RN-008.
         faixa:
           type: string
           enum: [VERDE, AMARELO, VERMELHO]
-          description: AMARELO é a faixa de atenção, exibida em laranja no app.
+          description: A faixa inicial é VERDE abaixo de 40, AMARELO de 40 a menos de 70 e VERMELHO a partir de 70. Uma queda de faixa exige duas leituras abaixo do limite.
         diasComDadosValidos:
           type: integer
           minimum: 0
