@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/SeniorInsight-Project/si-contracts/main/events/telemetry.ingested.v1.json",
+  "title": "telemetry.ingested v1",
+  "type": "object",
+  "required": [
+    "specversion",
+    "id",
+    "source",
+    "type",
+    "time",
+    "datacontenttype",
+    "dataschema",
+    "subject",
+    "data"
+  ],
+  "properties": {
+    "specversion": {
+      "const": "1.0"
+    },
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "source": {
+      "const": "/telemetry-service"
+    },
+    "type": {
+      "const": "telemetry.ingested"
+    },
+    "time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "datacontenttype": {
+      "const": "application/json"
+    },
+    "dataschema": {
+      "const": "https://raw.githubusercontent.com/SeniorInsight-Project/si-contracts/main/events/telemetry.ingested.v1.json"
+    },
+    "subject": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "idosoId",
+        "agregados"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "idosoId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "agregados": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "dia",
+              "tipo",
+              "unidade",
+              "quantidade",
+              "minimo",
+              "maximo",
+              "media",
+              "soma",
+              "linhaBase14Dias",
+              "horasComDados"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "dia": {
+                "type": "string",
+                "format": "date"
+              },
+              "tipo": {
+                "enum": [
+                  "steps",
+                  "heart_rate",
+                  "resting_heart_rate",
+                  "oxygen_saturation",
+                  "sleep"
+                ]
+              },
+              "unidade": {
+                "type": "string"
+              },
+              "quantidade": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "minimo": {
+                "type": "number"
+              },
+              "maximo": {
+                "type": "number"
+              },
+              "media": {
+                "type": "number"
+              },
+              "soma": {
+                "type": "number"
+              },
+              "linhaBase14Dias": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "horasComDados": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 25
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "propertyNames": {
+    "pattern": "^[a-z0-9]{1,20}$"
+  }
+}

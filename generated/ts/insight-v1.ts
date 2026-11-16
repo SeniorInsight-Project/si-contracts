@@ -30,9 +30,10 @@ export interface components {
             idosoId: string;
             /** @enum {string} */
             estado: "DISPONIVEL" | "CONHECENDO_ROTINA" | "MONITORAMENTO_PAUSADO" | "SEM_ANALISE";
+            /** @description Score de risco. Valores maiores indicam maior risco, conforme RN-008. */
             score?: number;
             /**
-             * @description AMARELO é a faixa de atenção, exibida em laranja no app.
+             * @description A faixa inicial é VERDE abaixo de 40, AMARELO de 40 a menos de 70 e VERMELHO a partir de 70. Uma queda de faixa exige duas leituras abaixo do limite.
              * @enum {string}
              */
             faixa?: "VERDE" | "AMARELO" | "VERMELHO";
